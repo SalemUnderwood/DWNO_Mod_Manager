@@ -19,6 +19,8 @@ CONFIG_FILE = os.path.join(BASE_DIR, "DWNOModManagerconfig.json")
 
 class ModManager:
     def __init__(self, root):
+        self.exe_name="Digimon World Next Order.exe"
+
         self.root = root
         self.root.title("DWNO Mod Manager")
         self.root.geometry("1000x600")
@@ -52,12 +54,27 @@ class ModManager:
     def get_game_path(self):
         game_path = self.config.get("game_path", "")
         if not game_path or not os.path.exists(game_path):
-            game_path = self.ask_for_game_path()
-            if game_path:
-                self.config["game_path"] = game_path
-                with open(CONFIG_FILE, "w") as f:
-                    json.dump(self.config, f, indent=4)
+            game_path = self.find_game_path()
+            if not game_path or not os.path.exists(game_path):
+                game_path = self.ask_for_game_path()
+        if game_path:
+            self.config["game_path"] = game_path
+            with open(CONFIG_FILE, "w") as f:
+                json.dump(self.config, f, indent=4)
         return game_path
+
+    def find_game_path(self):
+        drives = [f"{d}:\\Program Files (x86)\\Steam\\steamapps\\common\\Digimon World Next Order" for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+        drives2 = [f"{d}:\\SteamLibrary\\steamapps\\common\\Digimon World Next Order" for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+        for drive in drives:
+            for root, _, files in os.walk(drive):
+                if self.exe_name in files:
+                    return root
+        for drive in drives2:
+            for root, _, files in os.walk(drive):
+                if self.exe_name in files:
+                    return root
+        return False
 
     def ask_for_game_path(self):
         return filedialog.askdirectory(title="Select Digimon World Next Order Game Folder")
